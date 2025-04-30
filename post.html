@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post CRUD</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto p-6">
+        <!-- Create Post Form -->
+        <div class="mb-6 p-4 bg-white shadow-md rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Create a New Post</h2>
+            <form id="createPostForm" enctype="multipart/form-data">
+                <label class="block text-gray-700">Title</label>
+                <input type="text" id="postTitle" class="w-full p-2 mb-4 border rounded" required>
+
+                <label class="block text-gray-700">Description</label>
+                <textarea id="postDescription" class="w-full p-2 mb-4 border rounded" required></textarea>
+
+                <label class="block text-gray-700">Image</label>
+                <input type="file" id="postImage" class="w-full mb-4 border rounded" accept="image/*">
+
+                <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Create Post</button>
+            </form>
+        </div>
+
+        <!-- Posts List -->
+        <div class="bg-white p-4 shadow-md rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">All Posts</h2>
+            <ul id="postList" class="space-y-4">
+                <!-- Posts will be appended here -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:8080/posts'; // Ganti dengan URL backend yang sesuai
+
+        // Fetch posts on page load
+        $(document).ready(function() {
+            fetchPosts();
+
+            // Handle create post form submission
+            $('#createPostForm').on('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData();
+                formData.append('title', $('#postTitle').val());
+                formData.append('description', $('#postDescription').val());
+                formData.append('image', $('#postImage')[0].files[0]);
+
+                $.ajax({
+                    url: apiUrl,
+                    method: 'POST',
+                    crossDomain: true,
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    // headers: {
+                    //     "Accept": "application/json" // FIX: Tambahkan ini untuk mencegah preflight CORS error
+                    // },
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        fetchPosts(); // Refresh the post list
+                        $('#createPostForm')[0].reset(); // Clear form
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error:", error);
+                        console.error("Response:", xhr.responseText);
+                        alert(`Error creating post: ${xhr.responseText}`);
+                    }
+                });
+            });
+        });
+
+        // Fetch posts and display them
+        function fetchPosts() {
+            $.ajax({
+                url: apiUrl,
+                method: 'GET',
+                // crossDomain: true,
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function(posts) {
+                    $('#postList').empty(); // Clear current posts list
+                    posts.forEach(post => {
+                        const postItem = `
+                            <li class="p-4 bg-gray-50 border rounded shadow-sm">
+                                <h3 class="font-semibold">${post.title}</h3>
+                                <p>${post.description}</p>
+                                <img src="${post.image}" alt="${post.title}" class="mt-2 max-w-xs">
+                                <div class="mt-4">
+                                    <button onclick="deletePost('${post.id}')" class="bg-red-500 text-white py-1 px-3 rounded mr-2">Delete</button>
+                                    <button onclick="editPost('${post.id}')" class="bg-yellow-500 text-white py-1 px-3 rounded">Edit</button>
+                                </div>
+                            </li>
+                        `;
+                        $('#postList').append(postItem);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching posts:", error);
+                    console.error("Response:", xhr.responseText);
+                    alert('Error fetching posts');
+                }
+            });
+        }
+
+        // Delete post
+        function deletePost(postId) {
+            $.ajax({
+                url: `${apiUrl}/${postId}`,
+                method: 'DELETE',
+                crossDomain: true,
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function() {
+                    fetchPosts(); // Refresh the post list
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error deleting post:", error);
+                    console.error("Response:", xhr.responseText);
+                    alert('Error deleting post');
+                }
+            });
+        }
+
+        // Edit post - pre-fill the form for updating
+        function editPost(postId) {
+            $.ajax({
+                url: `${apiUrl}/${postId}`,
+                method: 'GET',
+                crossDomain: true,
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function(post) {
+                    $('#postTitle').val(post.title);
+                    $('#postDescription').val(post.description);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching post details:", error);
+                    console.error("Response:", xhr.responseText);
+                    alert('Error fetching post details');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List CRUD</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-10">
+    <div class="max-w-full mx-auto bg-white p-6 rounded-lg shadow-lg">
+        <h1 class="text-2xl font-bold mb-4">Todo List</h1>
+        <div class="mb-4">
+            <input type="text" id="title" placeholder="Enter Todo Title" class="border p-2 w-full rounded">
+            <button id="addTodo" class="bg-blue-500 text-white px-4 py-2 rounded mt-2">Add Todo</button>
+        </div>
+        <ul id="todoList" class="space-y-2"></ul>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            function fetchTodos() {
+                $.ajax({
+                    url: "http://localhost:8080/todos/",
+                    type: "GET",
+                    xhrFields: { withCredentials: true }, // Include credentials
+                    success: function (data) {
+                        $('#todoList').html('');
+                        data.forEach(todo => {
+                            $('#todoList').append(`
+                                <li class="bg-gray-200 p-2 rounded flex justify-between items-center">
+                                    <span class="flex-1">${todo.title}</span>
+                                    <span class="flex-1 pl-2">${todo.status}</span>
+                                    <button class="bg-blue-500 text-white px-2 py-1 rounded successTodo" data-id="${todo.ID}">Success</button>
+                                    <button class="bg-green-500 text-white px-2 py-1 rounded editTodo" data-id="${todo.ID}" data-title="${todo.title}">Edit</button>
+                                    <button class="bg-red-500 text-white px-2 py-1 rounded deleteTodo" data-id="${todo.ID}">Delete</button>
+                                </li>
+                            `);
+                        });
+                    }
+                });
+            }
+            
+            fetchTodos();
+            
+            $(document).on('click', '#addTodo', function () {
+                const title = $('#title').val();
+                if (!title) return;
+                
+                $.ajax({
+                    url: "http://localhost:8080/todos/",
+                    type: "POST",
+                    xhrFields: { withCredentials: true }, // Include credentials
+                    contentType: "application/json",
+                    data: JSON.stringify({ title: title, status: "pending" }),
+                    success: function () {
+                        $('#title').val('');
+                        fetchTodos();
+                    }
+                });
+            });
+
+            $(document).on('click', '.editTodo', function () {
+                const id = $(this).data('id');
+                const newTitle = prompt("Edit title:", $(this).data('title'));
+                if (newTitle) {
+                    $.ajax({
+                        url: `http://localhost:8080/todos/update/${id}`,
+                        type: "PUT",
+                        xhrFields: { withCredentials: true }, // Include credentials
+                        contentType: "application/json",
+                        data: JSON.stringify({ title: newTitle, status: "pending" }),
+                        success: fetchTodos
+                    });
+                }
+            });
+
+            $(document).on('click', '.successTodo', function () {
+                const id = $(this).data('id');
+                if (confirm("Are you sure you success this todo?")) {
+                    $.ajax({
+                        url: `http://localhost:8080/todos/status/${id}`,
+                        type: "PUT",
+                        xhrFields: { withCredentials: true }, // Include credentials
+                        success: fetchTodos
+                    });
+                }
+            });
+
+            $(document).on('click', '.deleteTodo', function () {
+                const id = $(this).data('id');
+                if (confirm("Are you sure you want to delete this todo?")) {
+                    $.ajax({
+                        url: `http://localhost:8080/todos/${id}`,
+                        type: "DELETE",
+                        xhrFields: { withCredentials: true }, // Include credentials
+                        success: fetchTodos
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

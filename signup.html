@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signup</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex justify-center items-center h-screen">
+
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+    <h2 class="text-2xl font-bold text-center mb-4">Signup</h2>
+    <form id="signupForm">
+      <div class="mb-4">
+        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+        <input type="text" id="name" name="name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+      </div>
+
+      <div class="mb-4">
+        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+        <input type="email" id="email" name="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+      </div>
+
+      <div class="mb-4">
+        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+        <input type="password" id="password" name="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+      </div>
+
+      <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md focus:outline-none hover:bg-indigo-700">Signup</button>
+    </form>
+    <div id="signupError" class="mt-4 text-red-500 text-center hidden"></div>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      $('#signupForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const name = $('#name').val();
+        const email = $('#email').val();
+        const password = $('#password').val();
+
+        $.ajax({
+          url: 'http://localhost:8080/signup',  // Adjust according to your backend endpoint
+          type: 'POST',
+          xhrFields: {
+            withCredentials: true  // This will send credentials with the request
+          },
+          contentType: 'application/json',
+          data: JSON.stringify({ name: name, email: email, password: password }),
+          success: function(response) {
+            alert('Signup successful!');
+            window.location.href = 'login.html';  // Redirect to login page after successful signup
+          },
+          error: function(xhr, status, error) {
+            $('#signupError').text('Failed to register user').removeClass('hidden');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
